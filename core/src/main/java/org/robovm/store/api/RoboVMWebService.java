@@ -92,7 +92,7 @@ public class RoboVMWebService {
                             authToken = new AuthToken(body.getAuthToken(), () -> {
                                 // Token timed out.
                                 // TODO token timed out
-                                });
+                            });
                         }
                     }
                     if (success) {
@@ -153,38 +153,16 @@ public class RoboVMWebService {
             @Override
             public void onResponse(Response<APIResponse> response, Retrofit retrofit) {
                 if (response.isSuccess()) {
-//                    ActionWrapper.WRAPPER.invoke(completion, response.body());
-                    ActionWrapper.WRAPPER.invoke(completion, new APIResponse() {
-
-                        @Override
-                        public boolean isSuccess() {
-                            return true;
-                        }
-                    });
+                    ActionWrapper.WRAPPER.invoke(completion, response.body());
                 } else {
-//                    ActionWrapper.WRAPPER.invoke(completion, null);
-                    ActionWrapper.WRAPPER.invoke(completion, new APIResponse() {
-
-                        @Override
-                        public boolean isSuccess() {
-                            return true;
-                        }
-                    });
-
+                    ActionWrapper.WRAPPER.invoke(completion, null);
                 }
             }
 
             @Override
             public void onFailure(Throwable t) {
                 t.printStackTrace();
-//                ActionWrapper.WRAPPER.invoke(completion, null);
-                ActionWrapper.WRAPPER.invoke(completion, new APIResponse() {
-
-                    @Override
-                    public boolean isSuccess() {
-                        return true;
-                    }
-                });
+                ActionWrapper.WRAPPER.invoke(completion, null);
             }
         });
     }

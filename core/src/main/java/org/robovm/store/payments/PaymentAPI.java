@@ -24,6 +24,14 @@ public class PaymentAPI {
 
     private PaymentAPI() {
         this.creditCard = new CreditCard();
+//        test card
+//        this.creditCard = new CreditCard()
+//                .setType("visa")
+//                .setNumber("4446283280247004")
+//                .setExpireMonth(11)
+//                .setExpireYear(2018)
+//                .setFirstName("Joe")
+//                .setLastName("Shopper");
         DecimalFormatSymbols formatSymbols = new DecimalFormatSymbols(Locale.US);
         formatSymbols.setDecimalSeparator('.');
         format = new DecimalFormat("#0.00", formatSymbols);
@@ -74,18 +82,17 @@ public class PaymentAPI {
         }
         itemList.setItems(items);
 
-        // TODO: find out why request with shipping address return error
-//        ShippingAddress address = new ShippingAddress();
-//        address.setDefaultAddress(true);
-//        address.setCountryCode(Optional.ofNullable(Countries.getCountryForName(user.getCountry())).map(Country::getCode).orElse(""));
-//        address.setPostalCode(user.getZipCode());
-//        address.setCity(user.getCity());
-//        address.setLine1(user.getAddress1());
-//        address.setLine2(user.getAddress2());
-//        address.setState(user.getState());
-//        address.setRecipientName(user.getFirstName() + " " + user.getLastName());
-//        address.setPhone(user.getPhone());
-//        itemList.setShippingAddress(address);
+        // TODO: add validation
+        ShippingAddress address = new ShippingAddress();
+        address.setCountryCode(user.getCountry());
+        address.setPostalCode(user.getZipCode());
+        address.setCity(user.getCity());
+        address.setLine1(user.getAddress1());
+        address.setLine2(user.getAddress2());
+        address.setState(user.getState());
+        address.setRecipientName(String.format("%s %s", user.getFirstName(), user.getLastName()));
+        address.setPhone(user.getPhone() != null && user.getPhone().length() > 0 ? user.getPhone() : null);
+        itemList.setShippingAddress(address);
 
         amount.setTotal(format.format(total + 1.0));
         transaction.setAmount(amount);
