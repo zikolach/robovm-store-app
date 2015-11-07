@@ -1,25 +1,33 @@
 package org.robovm.store.payments;
 
 import com.paypal.api.payments.*;
+import com.paypal.base.Constants;
 import com.paypal.base.rest.APIContext;
 import com.paypal.base.rest.OAuthTokenCredential;
 import com.paypal.base.rest.PayPalRESTException;
+import org.robovm.store.model.Basket;
 import org.robovm.store.model.User;
+import org.robovm.store.util.Countries;
 
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.text.NumberFormat;
+import java.util.*;
 
 public class PaymentAPI {
 
     private static PaymentAPI instance = new PaymentAPI();
     private CreditCard creditCard;
     private User user;
+    private final NumberFormat format;
 
     private PaymentAPI() {
         this.creditCard = new CreditCard();
+        DecimalFormatSymbols formatSymbols = new DecimalFormatSymbols(Locale.US);
+        formatSymbols.setDecimalSeparator('.');
+        format = new DecimalFormat("#0.00", formatSymbols);
+        Countries.getCountries();
     }
 
     public static PaymentAPI getInstance() {
@@ -32,11 +40,12 @@ public class PaymentAPI {
         return tokenCredential.getAccessToken();
     }
 
-    public Payment createPayment(Amount amount,
-                                 String description,
-                                 String intent) throws PayPalRESTException {
+    public Payment createPayment(String description,
+                                 Basket basket,
+                                 User user) throws PayPalRESTException {
         Map<String, String> sdkConfig = new HashMap<>();
-        sdkConfig.put("mode", "sandbox");
+        sdkConfig.put("mode", Constants.SANDBOX);
+
 
         APIContext apiContext = new APIContext(getAccessToken());
         apiContext.setConfigurationMap(sdkConfig);
@@ -53,13 +62,40 @@ public class PaymentAPI {
 
         Transaction transaction = new Transaction();
         transaction.setDescription(description);
+
+        ItemList itemList = new ItemList();
+        Amount amount = new Amount("EUR", "0");
+        double total = 0;
+
+        ArrayList<Item> items = new ArrayList<>();
+        for (org.robovm.store.model.Order order : basket.getOrders()) {
+            total += order.getProduct().getPrice();
+            items.add(new Item("1", order.toString(), format.format(order.getProduct().getPrice()), amount.getCurrency()));
+        }
+        itemList.setItems(items);
+
+        // TODO: find out why request with shipping address return error
+//        ShippingAddress address = new ShippingAddress();
+//        address.setDefaultAddress(true);
+//        address.setCountryCode(Optional.ofNullable(Countries.getCountryForName(user.getCountry())).map(Country::getCode).orElse(""));
+//        address.setPostalCode(user.getZipCode());
+//        address.setCity(user.getCity());
+//        address.setLine1(user.getAddress1());
+//        address.setLine2(user.getAddress2());
+//        address.setState(user.getState());
+//        address.setRecipientName(user.getFirstName() + " " + user.getLastName());
+//        address.setPhone(user.getPhone());
+//        itemList.setShippingAddress(address);
+
+        amount.setTotal(format.format(total + 1.0));
         transaction.setAmount(amount);
+        transaction.setItemList(itemList);
 
         List<Transaction> transactions = new ArrayList<>();
         transactions.add(transaction);
 
         Payment payment = new Payment();
-        payment.setIntent(intent);
+        payment.setIntent("sale");
         payment.setPayer(payer);
         payment.setTransactions(transactions);
 

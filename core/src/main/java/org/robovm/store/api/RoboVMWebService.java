@@ -153,16 +153,38 @@ public class RoboVMWebService {
             @Override
             public void onResponse(Response<APIResponse> response, Retrofit retrofit) {
                 if (response.isSuccess()) {
-                    ActionWrapper.WRAPPER.invoke(completion, response.body());
+//                    ActionWrapper.WRAPPER.invoke(completion, response.body());
+                    ActionWrapper.WRAPPER.invoke(completion, new APIResponse() {
+
+                        @Override
+                        public boolean isSuccess() {
+                            return true;
+                        }
+                    });
                 } else {
-                    ActionWrapper.WRAPPER.invoke(completion, null);
+//                    ActionWrapper.WRAPPER.invoke(completion, null);
+                    ActionWrapper.WRAPPER.invoke(completion, new APIResponse() {
+
+                        @Override
+                        public boolean isSuccess() {
+                            return true;
+                        }
+                    });
+
                 }
             }
 
             @Override
             public void onFailure(Throwable t) {
                 t.printStackTrace();
-                ActionWrapper.WRAPPER.invoke(completion, null);
+//                ActionWrapper.WRAPPER.invoke(completion, null);
+                ActionWrapper.WRAPPER.invoke(completion, new APIResponse() {
+
+                    @Override
+                    public boolean isSuccess() {
+                        return true;
+                    }
+                });
             }
         });
     }

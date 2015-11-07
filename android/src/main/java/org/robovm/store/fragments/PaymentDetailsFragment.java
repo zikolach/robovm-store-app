@@ -2,6 +2,7 @@ package org.robovm.store.fragments;
 
 import android.app.Fragment;
 import android.app.ProgressDialog;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,7 +11,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.Toast;
-import com.paypal.api.payments.Amount;
 import com.paypal.api.payments.CreditCard;
 import com.paypal.api.payments.Payment;
 import com.paypal.base.rest.PayPalRESTException;
@@ -21,6 +21,7 @@ import org.robovm.store.model.Basket;
 import org.robovm.store.model.User;
 import org.robovm.store.payments.PaymentAPI;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class PaymentDetailsFragment extends Fragment {
@@ -35,6 +36,16 @@ public class PaymentDetailsFragment extends Fragment {
     private RadioButton cardTypeMastercardField;
 
     private Runnable paymentDetailsEnteredListener;
+
+    private class PaymentResult {
+        Payment payment;
+        PayPalRESTException error;
+
+        private PaymentResult(Payment payment, PayPalRESTException error) {
+            this.payment = payment;
+            this.error = error;
+        }
+    }
 
     public PaymentDetailsFragment() {
         this.creditCard = PaymentAPI.getInstance().getCreditCard();
@@ -72,24 +83,29 @@ public class PaymentDetailsFragment extends Fragment {
         cardTypeMastercardField = (RadioButton) shippingDetailsView.findViewById(R.id.cardTypeMastercard);
         cardTypeMastercardField.setText("mastercard");
 
+        List<RadioButton> cardTypes = Arrays.asList(cardTypeVisaField, cardTypeMastercardField);
+
+        for (RadioButton cardType : cardTypes) {
+            if (cardType.getText().equals(creditCard.getType())) {
+                cardType.setChecked(true);
+            } else {
+                cardType.setChecked(false);
+            }
+        }
+
         placeOrder.setOnClickListener((b) -> placeOrder());
 
         return shippingDetailsView;
     }
 
     private void placeOrder() {
-        EditText[] entries = new EditText[]{creditCardNumberField, firstNameField, lastNameField, expireMonthField,
-                expireYearField};
-        for (EditText entry : entries) {
-            entry.setEnabled(false);
-        }
-        cardTypeVisaField.setEnabled(false);
+        enableControls(false);
 
         creditCard.setFirstName(firstNameField.getText().toString());
         creditCard.setLastName(lastNameField.getText().toString());
-        if (cardTypeVisaField.isSelected()) {
+        if (cardTypeVisaField.isChecked()) {
             creditCard.setType(cardTypeVisaField.getText().toString());
-        } else if (cardTypeMastercardField.isSelected()) {
+        } else if (cardTypeMastercardField.isChecked()) {
             creditCard.setType(cardTypeMastercardField.getText().toString());
         }
         creditCard.setNumber(creditCardNumberField.getText().toString());
@@ -101,36 +117,52 @@ public class PaymentDetailsFragment extends Fragment {
 
         User user = RoboVMWebService.getInstance().getCurrentUser();
         RoboVMWebService.getInstance().placeOrder(user, (response) -> {
-            progressDialog.hide();
-            progressDialog.dismiss();
-            for (EditText entry : entries) {
-                entry.setEnabled(true);
-            }
 
             if (response.isSuccess()) {
 
                 Basket basket = RoboVMWebService.getInstance().getBasket();
 
-                try {
-                    Payment payment = PaymentAPI.getInstance().createPayment(new Amount("EUR", String.valueOf(basket.getOrders().size())), basket.toString(), user.toString());
 
-                    if ("approved".equals(payment.getState())) {
-                        Toast.makeText(getActivity(), String.format("Your order has been placed! ID:%s", payment.getId()), Toast.LENGTH_LONG).show();
-
-                        if (paymentDetailsEnteredListener != null) {
-                            paymentDetailsEnteredListener.run();
+                AsyncTask<String, String, PaymentResult> paymentTask = new AsyncTask<String, String, PaymentResult>() {
+                    @Override
+                    protected PaymentResult doInBackground(String... ignored) {
+                        try {
+                            Payment payment = PaymentAPI.getInstance().createPayment("Demo", basket, user);
+                            return new PaymentResult(payment, null);
+                        } catch (PayPalRESTException err) {
+                            return new PaymentResult(null, err);
                         }
-                    } else {
-                        Toast.makeText(getActivity(), "Your payment wasn't approved! Please try again later!", Toast.LENGTH_LONG).show();
                     }
 
-                } catch (PayPalRESTException e) {
-                    Toast.makeText(getActivity(), "Error processing payment! Please try again later!", Toast.LENGTH_LONG).show();
-                }
-                basket.clear();
+                    @Override
+                    protected void onPostExecute(PaymentResult result) {
+                        progressDialog.hide();
+                        progressDialog.dismiss();
+                        enableControls(true);
+                        if (result.payment != null) {
+                            if ("approved".equals(result.payment.getState())) {
+                                Toast.makeText(getActivity(), String.format("Your order has been placed! ID:%s", result.payment.getId()), Toast.LENGTH_LONG).show();
+                                basket.clear();
+                                if (paymentDetailsEnteredListener != null) {
+                                    paymentDetailsEnteredListener.run();
+                                }
+                            } else {
+                                Toast.makeText(getActivity(), "Your payment wasn't approved! Please try again later!", Toast.LENGTH_LONG).show();
+                            }
+                        } else {
+                            Toast.makeText(getActivity(), "Error processing payment! Please try again later!", Toast.LENGTH_LONG).show();
+                        }
+                    }
 
+                };
+
+                paymentTask.execute();
 
             } else {
+                progressDialog.hide();
+                progressDialog.dismiss();
+                enableControls(true);
+
                 List<ValidationError> errors = response.getErrors();
                 String alertMessage = "An unexpected error occurred! Please try again later!";
 
@@ -174,6 +206,15 @@ public class PaymentDetailsFragment extends Fragment {
             }
         });
 
+    }
+
+    private void enableControls(boolean enabled) {
+        EditText[] entries = new EditText[]{creditCardNumberField, firstNameField, lastNameField, expireMonthField,
+                expireYearField};
+        for (EditText entry : entries) {
+            entry.setEnabled(enabled);
+        }
+        cardTypeVisaField.setEnabled(enabled);
     }
 
     public void setPaymentDetailsEnteredListener(Runnable paymentDetailsEnteredListener) {
