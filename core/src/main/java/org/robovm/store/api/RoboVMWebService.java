@@ -149,7 +149,7 @@ public class RoboVMWebService {
         Objects.requireNonNull(user, "user");
         Objects.requireNonNull(completion);
 
-        api.order(new OrderRequest(authToken, currentUser, basket)).enqueue(new Callback<APIResponse>() {
+        api.order(new OrderRequest(authToken, user, basket)).enqueue(new Callback<APIResponse>() {
             @Override
             public void onResponse(Response<APIResponse> response, Retrofit retrofit) {
                 if (response.isSuccess()) {

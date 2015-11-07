@@ -5,7 +5,7 @@
               android:layout_height="fill_parent">
     <TextView
             style="?android:listSeparatorTextViewStyle"
-            android:text="@string/shippingInformation"
+            android:text="@string/paymentInformation"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginLeft="16dp"
@@ -23,6 +23,42 @@
                 android:layout_height="wrap_content"
                 android:paddingRight="16dp"
                 android:paddingLeft="16dp">
+            <RadioGroup
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                <RadioButton
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/cardTypeVisa"
+                        android:checked="false"/>
+                <RadioButton android:layout_width="wrap_content" android:layout_height="wrap_content"
+                             android:id="@+id/cardTypeMastercard" android:checked="false"
+                />
+            </RadioGroup>
+            <EditText
+                    android:inputType="text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/creditcard"
+                    android:hint="@string/creditcardNumber"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginBottom="4dp"/>
+            <EditText
+                    android:inputType="textPostalAddress"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/expireMonth"
+                    android:id="@+id/expireMonth"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginBottom="4dp"/>
+            <EditText
+                    android:inputType="textPostalAddress"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/expireYear"
+                    android:id="@+id/expireYear"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginBottom="4dp"/>
             <EditText
                     android:inputType="textPersonName"
                     android:layout_width="match_parent"
@@ -35,62 +71,6 @@
                     android:layout_height="wrap_content"
                     android:id="@+id/lastName"
                     android:hint="@string/lastName"/>
-            <EditText
-                    android:inputType="phone"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/phone"
-                    android:hint="@string/phoneNumber"
-                    android:layout_marginTop="4dp"
-                    android:layout_marginBottom="4dp"/>
-            <EditText
-                    android:inputType="textPostalAddress"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="@string/streetAddress1"
-                    android:id="@+id/streetAddress1"
-                    android:layout_marginTop="4dp"
-                    android:layout_marginBottom="4dp"/>
-            <EditText
-                    android:inputType="textPostalAddress"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="@string/streetAddress2"
-                    android:id="@+id/streetAddress2"
-                    android:layout_marginTop="4dp"
-                    android:layout_marginBottom="4dp"/>
-            <EditText
-                    android:inputType="textPostalAddress"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="@string/city"
-                    android:id="@+id/city"
-                    android:layout_marginTop="4dp"
-                    android:layout_marginBottom="4dp"/>
-            <EditText
-                    android:inputType="text"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="@string/postalCode"
-                    android:id="@+id/postalCode"
-                    android:layout_marginTop="4dp"
-                    android:layout_marginBottom="4dp"/>
-            <AutoCompleteTextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/country"
-                    android:hint="@string/country"
-                    android:imeOptions="actionNext"
-                    android:layout_marginTop="4dp"
-                    android:layout_marginBottom="4dp"/>
-            <AutoCompleteTextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/state"
-                    android:hint="@string/state"
-                    android:imeOptions="actionDone"
-                    android:layout_marginTop="4dp"
-                    android:layout_marginBottom="4dp"/>
             <Button
                     style="@style/RoboButton"
                     android:text="@string/placeOrder"
